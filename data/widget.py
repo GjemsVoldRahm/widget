@@ -3,7 +3,7 @@ import ipywidgets as ipw
 import html
 from IPython.display import HTML
 
-HTML('''<script>
+s = '''<script>
 code_show=true; 
 function code_toggle() {
  if (code_show){
@@ -14,7 +14,7 @@ function code_toggle() {
  code_show = !code_show
 } 
 $( document ).ready(code_toggle);
-</script>''')
+</script>'''
 
 DATA_DIR = 'data/'
 SCHEMA = ['statement_id', 'label', 'statement', 'subject', 
