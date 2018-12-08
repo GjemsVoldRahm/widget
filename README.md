@@ -1,4 +1,4 @@
-# widget
+# Widget
 
 Repository meant for an interactive widget to be used through Binder.
 
