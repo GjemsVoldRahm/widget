@@ -1,5 +1,6 @@
 import pandas as pd
 import ipywidgets as ipw
+import html
 from IPython.display import HTML
 
 HTML('''<script>
@@ -13,9 +14,7 @@ function code_toggle() {
  code_show = !code_show
 } 
 $( document ).ready(code_toggle);
-</script>
-The raw code for this IPython notebook is by default hidden for easier reading.
-To toggle on/off the raw code, click <a href="javascript:code_toggle()">here</a>.''')
+</script>''')
 
 DATA_DIR = 'data/'
 SCHEMA = ['statement_id', 'label', 'statement', 'subject', 
