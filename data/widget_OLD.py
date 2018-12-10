@@ -1,7 +1,6 @@
 import pandas as pd
 import ipywidgets as ipw
 import html
-import matplotlib.pyplot as plt
 from IPython.display import HTML
 
 s = '''<script>
@@ -18,11 +17,37 @@ $( document ).ready(code_toggle);
 </script>'''
 
 DATA_DIR = 'data/'
+SCHEMA = ['statement_id', 'label', 'statement', 'subject', 
+          'speaker', 'profession', 'state', 'party', 
+          'barely_true', 'false', 'half_true', 
+          'mostly_true', 'pants_on_fire', 'context']
 
 # Load the datasets into pandas dataframes
-liar = pd.read_csv(DATA_DIR + 'liar.csv', index_col=0)
+test = pd.read_csv(DATA_DIR + 'test.tsv', delimiter='\t', header=None, names=SCHEMA, index_col=False)
+train = pd.read_csv(DATA_DIR + 'train.tsv', delimiter='\t', header=None, names=SCHEMA, index_col=False)
+valid = pd.read_csv(DATA_DIR + 'valid.tsv', delimiter='\t', header=None, names=SCHEMA, index_col=False)
 
-# Define function find_top_x
+
+# Combine the three dataframes into one
+liar = pd.concat([train, test, valid], ignore_index=True)
+
+def clean(s):
+    '''
+    Replaces upper case letters by lower case ones and removes leading and trailing spaces.
+    :param s: str
+    :return: s
+    '''
+    if isinstance(s, str):
+        s = s.lower()\
+             .strip()
+    return s
+
+liar['state'] = liar['state'].apply(clean)
+
+for col_name in liar.columns:
+    if not (col_name == 'statement'):
+        liar[col_name] = liar[col_name].apply(clean)
+
 def find_top_x(col_name, x, sorted=False):
     '''
     Returns a sorted (if needed) list of the top x entities with the most occurencies in the column specified by col_name.
@@ -52,16 +77,12 @@ nb_tot = liar.shape[0]
 # Replace all NaNs by 'NA' to avoid categorizing statements as excluded when they should be included
 liarNA = liar.fillna('NA')
 
-# Define function lable_proportion
-def lable_proportion(label, subject, speaker, profession, state, party, context):
+def lable_proportion(toggle_dots, datapoints_per_dot, label, subject, speaker, profession, state, party, context):
     '''
     Print the proportion of statements which have the properties specified by the inputs.
-    :param label-context: str
-    :return None
+    :param toggle_dots: bool, datapoints_per_dot: int, label-context: str
+    :return: None
     '''
-	# Define the number of datapoints represented by one dot
-    datapoints_per_dot = -20
-	
     # In case "All <input>" is required, replace the corresponding input by the column it corresponds to in liarNA
     # so that the filter wrt this input contains only "True" values. 
     if subject == 'all_subjects':
@@ -91,26 +112,26 @@ def lable_proportion(label, subject, speaker, profession, state, party, context)
     
     # Apply the filters and count the number of remaining statements for each label.
     if label == 'all_labels':
-        nb_pants_on_fire = liarNA[filter_pants_on_fire].shape[0] / datapoints_per_dot
-        nb_false         = liarNA[filter_false]        .shape[0] / datapoints_per_dot
-        nb_barely_true   = liarNA[filter_barely_true]  .shape[0] / datapoints_per_dot
-        nb_half_true     = liarNA[filter_half_true]    .shape[0] / datapoints_per_dot
-        nb_mostly_true   = liarNA[filter_mostly_true]  .shape[0] / datapoints_per_dot
-        nb_true          = liarNA[filter_true]         .shape[0] / datapoints_per_dot
+        nb_pants_on_fire = round(liarNA[filter_pants_on_fire].shape[0] / datapoints_per_dot)
+        nb_false         = round(liarNA[filter_false]        .shape[0] / datapoints_per_dot)
+        nb_barely_true   = round(liarNA[filter_barely_true]  .shape[0] / datapoints_per_dot)
+        nb_half_true     = round(liarNA[filter_half_true]    .shape[0] / datapoints_per_dot)
+        nb_mostly_true   = round(liarNA[filter_mostly_true]  .shape[0] / datapoints_per_dot)
+        nb_true          = round(liarNA[filter_true]         .shape[0] / datapoints_per_dot)
     else:
-        nb_pants_on_fire = liarNA[filter_pants_on_fire & (liarNA.label==label)].shape[0] / datapoints_per_dot
-        nb_false         = liarNA[filter_false         & (liarNA.label==label)].shape[0] / datapoints_per_dot
-        nb_barely_true   = liarNA[filter_barely_true   & (liarNA.label==label)].shape[0] / datapoints_per_dot
-        nb_half_true     = liarNA[filter_half_true     & (liarNA.label==label)].shape[0] / datapoints_per_dot
-        nb_mostly_true   = liarNA[filter_mostly_true   & (liarNA.label==label)].shape[0] / datapoints_per_dot
-        nb_true          = liarNA[filter_true          & (liarNA.label==label)].shape[0] / datapoints_per_dot
+        nb_pants_on_fire = round(liarNA[filter_pants_on_fire & (liarNA.label==label)].shape[0] / datapoints_per_dot)
+        nb_false         = round(liarNA[filter_false         & (liarNA.label==label)].shape[0] / datapoints_per_dot)
+        nb_barely_true   = round(liarNA[filter_barely_true   & (liarNA.label==label)].shape[0] / datapoints_per_dot)
+        nb_half_true     = round(liarNA[filter_half_true     & (liarNA.label==label)].shape[0] / datapoints_per_dot)
+        nb_mostly_true   = round(liarNA[filter_mostly_true   & (liarNA.label==label)].shape[0] / datapoints_per_dot)
+        nb_true          = round(liarNA[filter_true          & (liarNA.label==label)].shape[0] / datapoints_per_dot)
     
     # Count the number of statements which does not have the properties specified by the inputs
-    nb_others = nb_tot/datapoints_per_dot - (nb_pants_on_fire + nb_false + nb_barely_true +
-                                                   nb_half_true + nb_mostly_true + nb_true)
+    nb_others = round(nb_tot/datapoints_per_dot - (nb_pants_on_fire + nb_false + nb_barely_true +
+                                                   nb_half_true + nb_mostly_true + nb_true))
     
     # Print the legend
-    print('\033[1mThere is a total of %s statements, out of which %s satisfy your requirements.\033[0m'%(nb_tot, nb_tot-round(nb_others*datapoints_per_dot)))
+    print('\033[1mThere is a total of %s statements, out of which %s satisfy your requirements.\033[0m'%(nb_tot, nb_tot-nb_others*datapoints_per_dot))
     print('\n\033[41m    \033[0m Pants on fire    ' +
             '\033[42m    \033[0m False    '         +
             '\033[43m    \033[0m Barely true    '   +
@@ -119,17 +140,23 @@ def lable_proportion(label, subject, speaker, profession, state, party, context)
             '\033[46m    \033[0m True    '          +
             '\033[40m    \033[0m Excluded\n')
     
-    plt.figure(figsize=(20,10))
-    plt.fill_between([0,1], 0, nb_pants_on_fire, facecolor=(233/255,91/255,88/255))
-    plt.fill_between([0,1], nb_pants_on_fire, nb_pants_on_fire+nb_false, facecolor=(1/255,162/255,80/255))
-    plt.fill_between([0,1], nb_pants_on_fire+nb_false, nb_pants_on_fire+nb_false+nb_barely_true, facecolor=(224/255,181/255,42/255))
-    plt.fill_between([0,1], nb_pants_on_fire+nb_false+nb_barely_true, nb_pants_on_fire+nb_false+nb_barely_true+nb_half_true, facecolor=(37/255,141/255,246/255))
-    plt.fill_between([0,1], nb_pants_on_fire+nb_false+nb_barely_true+nb_half_true, nb_pants_on_fire+nb_false+nb_barely_true+nb_half_true+nb_mostly_true, facecolor=(191/255,85/255,180/255))
-    plt.fill_between([0,1], nb_pants_on_fire+nb_false+nb_barely_true+nb_half_true+nb_mostly_true, nb_pants_on_fire+nb_false+nb_barely_true+nb_half_true+nb_mostly_true+nb_true, facecolor=(103/255,194/255,203/255))
-    plt.fill_between([0,1], nb_pants_on_fire+nb_false+nb_barely_true+nb_half_true+nb_mostly_true+nb_true, nb_pants_on_fire+nb_false+nb_barely_true+nb_half_true+nb_mostly_true+nb_true+nb_others, facecolor=(63/255,63/255,63/255))
-    plt.xlim((0,1))
-    plt.ylim((nb_pants_on_fire+nb_false+nb_barely_true+nb_half_true+nb_mostly_true+nb_true+nb_true+nb_others,0))
-    plt.axis('off')
+    # Print colored areas proportional to the number of statements satisfying the requirements
+    if toggle_dots:# With dots
+        print('\033[41m' + html.unescape(nb_pants_on_fire*'&#x25CF') + '\033[0m' +
+              '\033[42m' + html.unescape(nb_false*'&#x25CF')         + '\033[0m' +
+              '\033[43m' + html.unescape(nb_barely_true*'&#x25CF')   + '\033[0m' +
+              '\033[44m' + html.unescape(nb_half_true*'&#x25CF')     + '\033[0m' +
+              '\033[45m' + html.unescape(nb_mostly_true*'&#x25CF')   + '\033[0m' +
+              '\033[46m' + html.unescape(nb_true*'&#x25CF')          + '\033[0m' +
+              '\033[40m' + html.unescape(nb_others*'&#x25CF')        + '\033[0m')
+    else:# Without dots
+        print('\033[41m' + nb_pants_on_fire*' ' + '\033[0m' +
+              '\033[42m' + nb_false*' '         + '\033[0m' +
+              '\033[43m' + nb_barely_true*' '   + '\033[0m' +
+              '\033[44m' + nb_half_true*' '     + '\033[0m' +
+              '\033[45m' + nb_mostly_true*' '   + '\033[0m' +
+              '\033[46m' + nb_true*' '          + '\033[0m' +
+              '\033[40m' + nb_others*' '        + '\033[0m')
 
 # Create a widget for the function above (lable_proportion)
 ipw.interact(lable_proportion,
