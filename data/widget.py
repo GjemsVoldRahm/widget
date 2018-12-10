@@ -2,6 +2,7 @@ import pandas as pd
 import ipywidgets as ipw
 import html
 import matplotlib.pyplot as plt
+%matplotlib inline
 from IPython.display import HTML
 
 s = '''<script>
