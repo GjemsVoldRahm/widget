@@ -2,8 +2,9 @@ import pandas as pd
 import ipywidgets as ipw
 import html
 import matplotlib.pyplot as plt
-%matplotlib inline
 from IPython.display import HTML
+from IPython import get_ipython
+get_ipython().run_line_magic('matplotlib', 'inline')
 
 s = '''<script>
 code_show=true; 
@@ -54,10 +55,10 @@ nb_tot = liar.shape[0]
 liarNA = liar.fillna('NA')
 
 # Define function lable_proportion
-def lable_proportion(label, subject, speaker, profession, state, party, context):
+def lable_proportion(hide_excluded, label, subject, speaker, profession, state, party, context):
     '''
     Print the proportion of statements which have the properties specified by the inputs.
-    :param label-context: str
+    :param hide_excluded: bool, label-context: str
     :return None
     '''
 	# Define the number of datapoints represented by one dot
@@ -120,6 +121,7 @@ def lable_proportion(label, subject, speaker, profession, state, party, context)
             '\033[46m    \033[0m True    '          +
             '\033[40m    \033[0m Excluded\n')
     
+    # Print colored areas proportional to the number of statements satisfying the requirements
     plt.figure(figsize=(20,10))
     plt.fill_between([0,1], 0, nb_pants_on_fire, facecolor=(233/255,91/255,88/255))
     plt.fill_between([0,1], nb_pants_on_fire, nb_pants_on_fire+nb_false, facecolor=(1/255,162/255,80/255))
@@ -127,15 +129,19 @@ def lable_proportion(label, subject, speaker, profession, state, party, context)
     plt.fill_between([0,1], nb_pants_on_fire+nb_false+nb_barely_true, nb_pants_on_fire+nb_false+nb_barely_true+nb_half_true, facecolor=(37/255,141/255,246/255))
     plt.fill_between([0,1], nb_pants_on_fire+nb_false+nb_barely_true+nb_half_true, nb_pants_on_fire+nb_false+nb_barely_true+nb_half_true+nb_mostly_true, facecolor=(191/255,85/255,180/255))
     plt.fill_between([0,1], nb_pants_on_fire+nb_false+nb_barely_true+nb_half_true+nb_mostly_true, nb_pants_on_fire+nb_false+nb_barely_true+nb_half_true+nb_mostly_true+nb_true, facecolor=(103/255,194/255,203/255))
-    plt.fill_between([0,1], nb_pants_on_fire+nb_false+nb_barely_true+nb_half_true+nb_mostly_true+nb_true, nb_pants_on_fire+nb_false+nb_barely_true+nb_half_true+nb_mostly_true+nb_true+nb_others, facecolor=(63/255,63/255,63/255))
+    
+    if hide_excluded:# Hiding excluded points
+        plt.ylim((nb_pants_on_fire+nb_false+nb_barely_true+nb_half_true+nb_mostly_true+nb_true+nb_true,0))
+    else:# Showing excluded points
+        plt.fill_between([0,1], nb_pants_on_fire+nb_false+nb_barely_true+nb_half_true+nb_mostly_true+nb_true, nb_pants_on_fire+nb_false+nb_barely_true+nb_half_true+nb_mostly_true+nb_true+nb_others, facecolor=(63/255,63/255,63/255))
+        plt.ylim((nb_pants_on_fire+nb_false+nb_barely_true+nb_half_true+nb_mostly_true+nb_true+nb_true+nb_others,0))
+    
     plt.xlim((0,1))
-    plt.ylim((nb_pants_on_fire+nb_false+nb_barely_true+nb_half_true+nb_mostly_true+nb_true+nb_true+nb_others,0))
     plt.axis('off')
-    plt.show()
 
 # Create a widget for the function above (lable_proportion)
 ipw.interact(lable_proportion,
-             toggle_dots = ipw.widgets.ToggleButton(value=False, description='Toggle dots', button_style='success', tooltip='Show/hide the dots representing each statements'),
+             hide_excluded = ipw.widgets.ToggleButton(value=False, description='Hide \"excluded\"', button_style='success', tooltip='Show/hide the statements which do not satisfy the requirements'),
              datapoints_per_dot = ipw.widgets.IntSlider(value=1., min=1., max=10, description='#statements per dot', style={'description_width': 'initial'}),
              label      = [('All labels', 'all_labels'), ('Pants on fire', 'pants-fire'),
                            ('False', 'false'), ('Barely true', 'barely-true'),
