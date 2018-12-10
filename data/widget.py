@@ -130,6 +130,7 @@ def lable_proportion(label, subject, speaker, profession, state, party, context)
     plt.xlim((0,1))
     plt.ylim((nb_pants_on_fire+nb_false+nb_barely_true+nb_half_true+nb_mostly_true+nb_true+nb_true+nb_others,0))
     plt.axis('off')
+    plt.show()
 
 # Create a widget for the function above (lable_proportion)
 ipw.interact(lable_proportion,
