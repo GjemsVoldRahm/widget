@@ -62,7 +62,7 @@ def lable_proportion(hide_excluded, label, subject, speaker, profession, state, 
     :return None
     '''
 	# Define the number of datapoints represented by one dot
-    datapoints_per_dot = -20
+    datapoints_per_dot = -1
 	
     # In case "All <input>" is required, replace the corresponding input by the column it corresponds to in liarNA
     # so that the filter wrt this input contains only "True" values. 
@@ -131,10 +131,14 @@ def lable_proportion(hide_excluded, label, subject, speaker, profession, state, 
     plt.fill_between([0,1], nb_pants_on_fire+nb_false+nb_barely_true+nb_half_true+nb_mostly_true, nb_pants_on_fire+nb_false+nb_barely_true+nb_half_true+nb_mostly_true+nb_true, facecolor=(103/255,194/255,203/255))
     
     if hide_excluded:# Hiding excluded points
-        plt.ylim((nb_pants_on_fire+nb_false+nb_barely_true+nb_half_true+nb_mostly_true+nb_true+nb_true,0))
+        if -nb_others == nb_tot:
+            plt.fill_between([0,1], 0, 1, facecolor=(1, 1, 1))
+            plt.ylim((0, 1))
+        else:
+            plt.ylim((nb_pants_on_fire+nb_false+nb_barely_true+nb_half_true+nb_mostly_true+nb_true, 0))
     else:# Showing excluded points
         plt.fill_between([0,1], nb_pants_on_fire+nb_false+nb_barely_true+nb_half_true+nb_mostly_true+nb_true, nb_pants_on_fire+nb_false+nb_barely_true+nb_half_true+nb_mostly_true+nb_true+nb_others, facecolor=(63/255,63/255,63/255))
-        plt.ylim((nb_pants_on_fire+nb_false+nb_barely_true+nb_half_true+nb_mostly_true+nb_true+nb_true+nb_others,0))
+        plt.ylim((nb_pants_on_fire+nb_false+nb_barely_true+nb_half_true+nb_mostly_true+nb_true+nb_others, 0))
     
     plt.xlim((0,1))
     plt.axis('off')
